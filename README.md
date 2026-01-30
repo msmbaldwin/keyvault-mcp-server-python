@@ -36,9 +36,9 @@ This sample demonstrates how to build a customer-owned [Model Context Protocol (
 
 - Azure subscription - [Create one for free](https://azure.microsoft.com/pricing/purchase-options/azure-account)
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) (v2.50+)
-- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
 - [Python 3.10+](https://www.python.org/downloads/)
 - An existing Azure Key Vault with RBAC enabled and at least one secret
+- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) (optional, for one-command deployment)
 
 ## Quickstart
 
