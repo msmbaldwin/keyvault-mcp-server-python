@@ -1,0 +1,8 @@
+name: keyvault-mcp-server
+metadata:
+  template: keyvault-mcp-server-python@0.0.1
+services:
+  mcp-server:
+    project: .
+    language: python
+    host: containerapp

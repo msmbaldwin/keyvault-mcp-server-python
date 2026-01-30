@@ -1,0 +1,8 @@
+{
+  "analyticsMicrosoftAppInsights": "appi-",
+  "analyticsMicrosoftOperationalinsightsWorkspaces": "log-",
+  "appContainerApps": "ca-",
+  "appManagedEnvironments": "cae-",
+  "containerRegistryRegistries": "cr",
+  "managedIdentityUserAssignedIdentities": "id-"
+}
