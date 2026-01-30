@@ -2,7 +2,7 @@
 
 A Python MCP server that exposes Azure Key Vault data-plane operations to AI agents. Uses managed identity for authentication and least-privilege RBAC for secure secret access. Deploy to Azure Container Apps and connect from GitHub Copilot Chat agent mode.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/keyvault-mcp-server-python)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/msmbaldwin/keyvault-mcp-server-python)
 
 ## Overview
 
@@ -45,7 +45,7 @@ This sample demonstrates how to build a customer-owned [Model Context Protocol (
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Azure-Samples/keyvault-mcp-server-python.git
+git clone https://github.com/msmbaldwin/keyvault-mcp-server-python.git
 cd keyvault-mcp-server-python
 ```
 
