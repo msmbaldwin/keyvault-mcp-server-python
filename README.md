@@ -2,8 +2,6 @@
 
 A Python MCP server that exposes Azure Key Vault data-plane operations to AI agents. Uses managed identity for authentication and least-privilege RBAC for secure secret access. Deploy to Azure Container Apps and connect from GitHub Copilot Chat agent mode.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/msmbaldwin/keyvault-mcp-server-python)
-
 ## Overview
 
 This sample demonstrates how to build a customer-owned [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes Azure Key Vault data-plane operations to AI agents.
@@ -35,31 +33,36 @@ This sample demonstrates how to build a customer-owned [Model Context Protocol (
 ## Prerequisites
 
 - Azure subscription - [Create one for free](https://azure.microsoft.com/pricing/purchase-options/azure-account)
-- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) (v2.50+)
-- [Python 3.10+](https://www.python.org/downloads/)
 - An existing Azure Key Vault with RBAC enabled and at least one secret
-- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) (optional, for one-command deployment)
+- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) (v2.50+)
 
-## Quickstart
+## Getting Started
 
-### 1. Clone the repository
+Choose the path that fits your needs:
+
+| Path | Best for | What you need |
+|------|----------|---------------|
+| [**Deploy to Azure**](#option-1-deploy-to-azure-recommended) | Production use, team sharing | Azure subscription, `azd` CLI |
+| [**Run locally**](#option-2-run-locally) | Quick testing, development | Python 3.10+, Azure CLI |
+| [**Codespaces**](#option-3-github-codespaces) | Contributing to this repo | GitHub account |
+
+---
+
+## Option 1: Deploy to Azure (Recommended)
+
+Deploy the MCP server to Azure Container Apps for production use. This gives you a hosted endpoint with managed identity authentication.
+
+### Prerequisites for Azure deployment
+
+- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
+
+### Steps
+
+**1. Clone and deploy**
 
 ```bash
 git clone https://github.com/msmbaldwin/keyvault-mcp-server-python.git
 cd keyvault-mcp-server-python
-```
-
-### 2. Set up your environment
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 3. Deploy to Azure
-
-```bash
 azd auth login
 azd up
 ```
@@ -70,7 +73,7 @@ You'll be prompted for:
 - **Azure location**: Select a region
 - **Key Vault name**: The name of your existing Key Vault
 
-### 4. Configure VS Code
+**2. Configure VS Code**
 
 After deployment, add the MCP server to your VS Code settings:
 
@@ -93,31 +96,103 @@ After deployment, add the MCP server to your VS Code settings:
 
 Replace `<your-container-app-url>` with the URL from the `azd up` output.
 
-### 5. Use in GitHub Copilot Chat
+**3. Use in GitHub Copilot Chat**
 
 1. Open GitHub Copilot Chat (`Ctrl+Alt+I`)
 2. Select **Agent mode** from the dropdown
 3. Click **Tools** to verify `getSecret` and `listSecrets` are available
 4. Try a prompt like: "List the secrets in the key vault"
 
-## Local Development
+---
 
-### Run locally with Azure credentials
+## Option 2: Run Locally
+
+Run the MCP server on your local machine for quick testing or development.
+
+### Prerequisites for local development
+
+- [Python 3.10+](https://www.python.org/downloads/)
+- [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) (for authentication)
+
+### Steps
+
+**1. Clone and install dependencies**
 
 ```bash
-# Set environment variables
-export KEYVAULT_URL="https://<your-vault-name>.vault.azure.net/"
+git clone https://github.com/msmbaldwin/keyvault-mcp-server-python.git
+cd keyvault-mcp-server-python
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-# Login to Azure (for DefaultAzureCredential)
+**2. Authenticate and run**
+
+```bash
+# Login to Azure (required for DefaultAzureCredential)
 az login
 
-# Run the server
+# Set your Key Vault URL
+export KEYVAULT_URL="https://<your-vault-name>.vault.azure.net/"
+
+# Start the server
 python src/server.py
 ```
 
-### Run in GitHub Codespaces
+The server will start on `http://localhost:3000`.
 
-Click the button at the top of this README to open in Codespaces. The dev container includes all dependencies.
+**3. Configure VS Code**
+
+Add to your VS Code `settings.json`:
+
+```json
+{
+    "mcp": {
+        "servers": {
+            "keyvault-mcp-server": {
+                "type": "http",
+                "url": "http://localhost:3000/mcp"
+            }
+        }
+    }
+}
+```
+
+**4. Use in GitHub Copilot Chat**
+
+1. Open GitHub Copilot Chat (`Ctrl+Alt+I`)
+2. Select **Agent mode** from the dropdown
+3. Click **Tools** to verify the tools are available
+
+---
+
+## Option 3: GitHub Codespaces
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/msmbaldwin/keyvault-mcp-server-python)
+
+Codespaces provides a pre-configured development environment. Best for contributors or those who want to explore the code without local setup.
+
+> **Note**: Codespaces still requires Azure authentication and configuration. It's convenient for development, but not a "zero-config" experience.
+
+### Steps
+
+1. Click the badge above to open in Codespaces
+2. Once the container starts, authenticate with Azure:
+   ```bash
+   az login --use-device-code
+   ```
+3. Find your Key Vault name:
+   ```bash
+   az keyvault list --query '[].name' -o tsv
+   ```
+4. Start the server:
+   ```bash
+   export KEYVAULT_URL="https://<your-vault-name>.vault.azure.net/"
+   python src/server.py
+   ```
+5. The MCP settings are pre-configured. Reload VS Code (`Ctrl+Shift+P` → "Reload Window"), then use Agent mode in Copilot Chat.
+
+---
 
 ## Security
 

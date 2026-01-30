@@ -23,5 +23,11 @@
     },
     "postCreateCommand": "pip install -r requirements.txt",
     "forwardPorts": [3000],
+    "portsAttributes": {
+        "3000": {
+            "label": "MCP Server",
+            "onAutoForward": "notify"
+        }
+    },
     "remoteUser": "vscode"
 }
