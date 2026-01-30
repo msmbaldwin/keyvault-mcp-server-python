@@ -1,5 +1,6 @@
 azure-identity>=1.15.0
 azure-keyvault-secrets>=4.8.0
+azure-monitor-query>=1.2.0
 mcp>=1.0.0
 uvicorn>=0.30.0
 starlette>=0.38.0

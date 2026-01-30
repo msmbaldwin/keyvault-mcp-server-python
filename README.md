@@ -6,7 +6,12 @@ A Python MCP server that exposes Azure Key Vault data-plane operations to AI age
 
 ## Overview
 
-This sample demonstrates how to build a customer-owned [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes Azure Key Vault data-plane operations to AI agents. 
+This sample demonstrates how to build a customer-owned [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes Azure Key Vault data-plane operations to AI agents.
+
+**Three integration patterns:**
+- **Agent → Key Vault**: Read secrets through MCP tools
+- **Key Vault → Agent**: Trigger agent workflows from Key Vault events (Event Grid)
+- **Telemetry → Agent**: Query audit logs for debugging and monitoring
 
 **Key features:**
 - **Data-plane only**: Exposes only secret read operations, no management-plane access
@@ -23,6 +28,9 @@ This sample demonstrates how to build a customer-owned [Model Context Protocol (
 |------|-------------|---------------|
 | `getSecret` | Retrieve a secret value | `GET /secrets/{name}` |
 | `listSecrets` | List secret names (not values) | `GET /secrets` |
+| `queryKeyVaultLogs` | Query audit logs for debugging | Azure Monitor Logs API |
+
+> **Note**: The `queryKeyVaultLogs` tool requires additional configuration. See [Enable telemetry queries](#enable-telemetry-queries) below.
 
 ## Prerequisites
 
@@ -122,6 +130,13 @@ This sample follows security best practices:
 | **Managed identity** | No secrets stored in configuration |
 | **Single-vault scope** | Role assignment scoped to one vault |
 
+### Required roles
+
+| Role | Scope | Purpose |
+|------|-------|--------|
+| `Key Vault Secrets User` | Key Vault | Read secrets |
+| `Log Analytics Reader` | Log Analytics workspace | Query audit logs (optional) |
+
 ### Roles to avoid
 
 Do **not** grant these roles to the MCP server identity:
@@ -142,6 +157,57 @@ Do **not** grant these roles to the MCP server identity:
 ```bash
 azd down --purge --force
 ```
+
+## Extend the pattern
+
+### Enable telemetry queries
+
+To enable the `queryKeyVaultLogs` tool for agentic debugging:
+
+1. **Enable Key Vault diagnostic logging** to a Log Analytics workspace
+2. **Set the environment variable**:
+   ```bash
+   export LOG_ANALYTICS_WORKSPACE_ID="<your-workspace-id>"
+   ```
+3. **Assign the Log Analytics Reader role** to the managed identity:
+   ```bash
+   az role assignment create \
+       --role "Log Analytics Reader" \
+       --assignee-object-id <principalId> \
+       --assignee-principal-type ServicePrincipal \
+       --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<workspace>
+   ```
+
+**Example queries:**
+
+| Scenario | Query |
+|----------|-------|
+| Failed access | `AzureDiagnostics \| where ResourceProvider == "MICROSOFT.KEYVAULT" and ResultSignature == "Forbidden"` |
+| Recent access | `AzureDiagnostics \| where OperationName == "SecretGet" \| summarize count() by CallerIPAddress` |
+| Unusual patterns | `AzureDiagnostics \| where ResourceProvider == "MICROSOFT.KEYVAULT" \| summarize count() by bin(TimeGenerated, 1h)` |
+
+### Trigger agents from Key Vault events
+
+Key Vault integrates with [Azure Event Grid](https://learn.microsoft.com/azure/key-vault/general/event-grid-overview) to emit events when secrets, keys, or certificates change. Use these events to trigger agent workflows:
+
+| Event | Agent workflow |
+|-------|---------------|
+| `SecretNearExpiry` | Agent initiates secret rotation |
+| `CertificateNearExpiry` | Agent triggers certificate renewal |
+| `SecretNewVersionCreated` | Agent validates and updates dependent apps |
+
+To implement, create an Event Grid subscription:
+
+```bash
+az eventgrid event-subscription create \
+    --name keyvault-agent-trigger \
+    --source-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<vault> \
+    --endpoint-type webhook \
+    --endpoint https://<your-agent-endpoint>/api/keyvault-events \
+    --included-event-types Microsoft.KeyVault.SecretNearExpiry Microsoft.KeyVault.CertificateNearExpiry
+```
+
+> **Note**: Event Grid triggers require a separate webhook endpoint (such as an Azure Function), not the MCP server itself. The MCP server can then be called by the agent to retrieve additional context.
 
 ## Related documentation
 
