@@ -59,10 +59,23 @@ module containerRegistry './modules/container-registry.bicep' = {
   }
 }
 
+// Role assignment for AcrPull on Container Registry
+module acrRoleAssignment './modules/acr-role-assignment.bicep' = {
+  name: 'acr-role-assignment'
+  scope: rg
+  params: {
+    containerRegistryName: containerRegistry.outputs.name
+    principalId: identity.outputs.principalId
+  }
+}
+
 // MCP Server Container App
 module mcpServer './modules/container-app.bicep' = {
   name: 'mcp-server'
   scope: rg
+  dependsOn: [
+    acrRoleAssignment
+  ]
   params: {
     name: '${abbrs.appContainerApps}mcp-${resourceToken}'
     location: location
